@@ -128,6 +128,46 @@ function addPin() {
   map.addLayer(vectorLayer);
 }
 
+var draw; // global so we can remove it later
+var source = new ol.source.Vector();
+function addRectangle() {
+  var type = "Polygon";
+
+  draw = new ol.interaction.Draw({
+    source: source,
+    type: /** @type {ol.geom.GeometryType} */ (type),
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.4)'
+      }),
+      stroke: new ol.style.Stroke({
+        color: 'rgba(0, 0, 0, 1)',
+        lineDash: [10, 10],
+        width: 2
+      }),
+      image: new ol.style.Circle({
+        radius: 5,
+        stroke: new ol.style.Stroke({
+          color: 'rgba(0, 0, 0, 0.7)'
+        }),
+        fill: new ol.style.Fill({
+          color: 'rgba(255, 255, 255, 0.4)'
+        })
+      })
+    })
+  });
+
+  map.addInteraction(draw);
+  // map.un("singleclick", mapOnClick);
+  // draw.on('drawstart',
+  //   function (evt) {
+  //     map.un("singleclick", mapOnClick);
+  //     // set sketch
+  //     sketch = evt.feature;
+  //   }, this);
+}
+
+
 function removePin() {
   console.log("removePin", map.getLayers().getArray());
   map
@@ -150,6 +190,7 @@ function loadMap() {
   setMapView();
   removePin();
   addPin();
+  addRectangle();
   checkMapLoaded();
 }
 
