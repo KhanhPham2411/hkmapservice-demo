@@ -87,50 +87,94 @@ map.on("click", function (event) {
   console.log("center: "); // note the ordering of the numbers
 });
 
-function addPin() {
-  // add location pin
-  var features = [];
 
-  var iconPath = "./placeholder.png";
-  //create Feature... with coordinates
-  var iconFeature = new ol.Feature({
-    geometry: new ol.geom.Point(ol.proj.fromLonLat(locationCorr)),
+var draw; // global so we can remove it later
+var source = new ol.source.Vector();
+
+function loadMap() {
+  console.log("loadMap");
+  locationCorr = [
+    Number(document.getElementById("lon").value),
+    Number(document.getElementById("lat").value),
+  ];
+  setMapView();
+  removePin();
+  addPin();
+  addPolygonInteraction();
+  addArea();
+
+  checkMapLoaded();
+}
+function addArea() {
+  var point1 = [114.2122061, 22.4252311];
+  var point2 = [114.2082061, 22.4272311]; // current location
+  var point3 = [114.2092561, 22.4292311];
+
+  var line1 = [ point1, point2 ];
+  var line2 = [ point2, point3 ];
+  var line3 = [ point1, point3 ];
+  addPolygon([line1, line2, line3]);
+  // addLine(line2);
+  // addLine(line3);
+}
+
+function addPolygon(vertices) {
+  var feature = new ol.Feature({
+    geometry: new ol.geom.Polygon(vertices)
   });
 
-  //create style for your feature...
-  var iconStyle = new ol.style.Style({
-    text: new ol.style.Text({
-      text: "\uf3c5",
-      font: "normal 38px FontAwesome",
-      fill: new ol.style.Fill({
-        color: "#ff0000",
-      }),
+  feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+  feature.setStyle(new ol.style.Style({
+    fill: new ol.style.Fill({
+      color: 'rgba(255, 255, 255, 0.4)'
     }),
-  });
+    stroke: new ol.style.Stroke({ color: '#FF0000', width: 2 })
+  }));
 
-  iconFeature.setStyle(iconStyle);
-  features.push(iconFeature);
-
-  /*
-   * create vector source
-   * you could set the style for all features in your vectoreSource as well
-   */
-  var vectorSource = new ol.source.Vector({
-    features: features, //add an array of features
-    //,style: iconStyle     //to set the style for all your features...
+  var vectorSource= new ol.source.Vector({
+    features: [feature]
   });
 
   var vectorLayer = new ol.layer.Vector({
     source: vectorSource,
-    name: "Pin",
+    style: new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.4)'
+      }),
+      stroke: new ol.style.Stroke({ color: '#FF0000', width: 2 })
+    })
   });
-
   map.addLayer(vectorLayer);
 }
 
-var draw; // global so we can remove it later
-var source = new ol.source.Vector();
-function addRectangle() {
+
+function addLine(points) {
+
+  for (var i = 0; i < points.length; i++) {
+      points[i] = ol.proj.transform(points[i], 'EPSG:4326', 'EPSG:3857');
+  }
+
+  var featureLine = new ol.Feature({
+      geometry: new ol.geom.LineString(points)
+  });
+
+  var vectorLine = new ol.source.Vector({});
+  vectorLine.addFeature(featureLine);
+
+  var vectorLineLayer = new ol.layer.Vector({
+      source: vectorLine,
+      style: new ol.style.Style({
+        fill: new ol.style.Fill({
+          color: 'rgba(255, 255, 255, 0.4)'
+        }),
+        stroke: new ol.style.Stroke({ color: '#FF0000', width: 2 }),
+        
+      })
+  });
+  map.addLayer(vectorLineLayer);
+}
+
+function addPolygonInteraction() {
   var type = "Polygon";
 
   draw = new ol.interaction.Draw({
@@ -167,29 +211,6 @@ function addRectangle() {
   //   }, this);
 }
 
-function addLine(points) {
-
-  for (var i = 0; i < points.length; i++) {
-      points[i] = ol.proj.transform(points[i], 'EPSG:4326', 'EPSG:3857');
-  }
-
-  var featureLine = new ol.Feature({
-      geometry: new ol.geom.LineString(points)
-  });
-
-  var vectorLine = new ol.source.Vector({});
-  vectorLine.addFeature(featureLine);
-
-  var vectorLineLayer = new ol.layer.Vector({
-      source: vectorLine,
-      style: new ol.style.Style({
-          fill: new ol.style.Fill({ color: '#FF0000', weight: 10 }),
-          stroke: new ol.style.Stroke({ color: '#FF0000', width: 2 })
-      })
-  });
-  map.addLayer(vectorLineLayer);
-}
-
 function removePin() {
   console.log("removePin", map.getLayers().getArray());
   map
@@ -203,32 +224,8 @@ function setMapView() {
   map.getView().setCenter(ol.proj.fromLonLat(locationCorr));
 }
 
-function loadMap() {
-  console.log("loadMap");
-  locationCorr = [
-    Number(document.getElementById("lon").value),
-    Number(document.getElementById("lat").value),
-  ];
-  setMapView();
-  removePin();
-  addPin();
-  addRectangle();
-  addArea();
 
-  checkMapLoaded();
-}
-function addArea() {
-  var point1 = [114.2122061, 22.4252311];
-  var point2 = [114.2082061, 22.4272311]; // current location
-  var point3 = [114.2092561, 22.4292311];
 
-  var line1 = [ point1, point2 ];
-  var line2 = [ point2, point3 ];
-  var line3 = [ point1, point3 ];
-  addLine([point1, point2, point3, point1]);
-  // addLine(line2);
-  // addLine(line3);
-}
 //check map is loaded
 //"Dirty" tiles can be in one of two states: Either they are being downloaded,
 //or the map is holding off downloading their replacement, and they are "wanted."
@@ -311,3 +308,44 @@ function generateMapImage() {
 }
 
 setLonLat(lon, lat);
+
+function addPin() {
+  // add location pin
+  var features = [];
+
+  var iconPath = "./placeholder.png";
+  //create Feature... with coordinates
+  var iconFeature = new ol.Feature({
+    geometry: new ol.geom.Point(ol.proj.fromLonLat(locationCorr)),
+  });
+
+  //create style for your feature...
+  var iconStyle = new ol.style.Style({
+    text: new ol.style.Text({
+      text: "\uf3c5",
+      font: "normal 38px FontAwesome",
+      fill: new ol.style.Fill({
+        color: "#ff0000",
+      }),
+    }),
+  });
+
+  iconFeature.setStyle(iconStyle);
+  features.push(iconFeature);
+
+  /*
+   * create vector source
+   * you could set the style for all features in your vectoreSource as well
+   */
+  var vectorSource = new ol.source.Vector({
+    features: features, //add an array of features
+    //,style: iconStyle     //to set the style for all your features...
+  });
+
+  var vectorLayer = new ol.layer.Vector({
+    source: vectorSource,
+    name: "Pin",
+  });
+
+  map.addLayer(vectorLayer);
+}
