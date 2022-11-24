@@ -20,8 +20,8 @@ if (document.all) {
     );
 }
 //mapdiv.style.height = window.innerHeight - margin + "px";
-mapdiv.style.height = "500px";
-mapdiv.style.width = "500px";
+// mapdiv.style.height = "500px";
+// mapdiv.style.width = "500px";
 
 // location param
 const params = new Proxy(new URLSearchParams(window.location.search), {
