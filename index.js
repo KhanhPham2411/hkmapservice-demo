@@ -167,6 +167,28 @@ function addRectangle() {
   //   }, this);
 }
 
+function addLine(points) {
+
+  for (var i = 0; i < points.length; i++) {
+      points[i] = ol.proj.transform(points[i], 'EPSG:4326', 'EPSG:3857');
+  }
+
+  var featureLine = new ol.Feature({
+      geometry: new ol.geom.LineString(points)
+  });
+
+  var vectorLine = new ol.source.Vector({});
+  vectorLine.addFeature(featureLine);
+
+  var vectorLineLayer = new ol.layer.Vector({
+      source: vectorLine,
+      style: new ol.style.Style({
+          fill: new ol.style.Fill({ color: '#FF0000', weight: 10 }),
+          stroke: new ol.style.Stroke({ color: '#FF0000', width: 2 })
+      })
+  });
+  map.addLayer(vectorLineLayer);
+}
 
 function removePin() {
   console.log("removePin", map.getLayers().getArray());
@@ -191,9 +213,22 @@ function loadMap() {
   removePin();
   addPin();
   addRectangle();
+  addArea();
+
   checkMapLoaded();
 }
+function addArea() {
+  var point1 = [114.2122061, 22.4252311];
+  var point2 = [114.2082061, 22.4272311]; // current location
+  var point3 = [114.2092561, 22.4292311];
 
+  var line1 = [ point1, point2 ];
+  var line2 = [ point2, point3 ];
+  var line3 = [ point1, point3 ];
+  addLine([point1, point2, point3, point1]);
+  // addLine(line2);
+  // addLine(line3);
+}
 //check map is loaded
 //"Dirty" tiles can be in one of two states: Either they are being downloaded,
 //or the map is holding off downloading their replacement, and they are "wanted."
